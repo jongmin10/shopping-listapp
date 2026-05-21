@@ -195,7 +195,13 @@ async function init() {
 }
 
 document.getElementById('kakaoBtn').onclick = async () => {
-  const { error } = await sb.auth.signInWithOAuth({ provider:'kakao', options:{ redirectTo: location.origin + location.pathname } });
+  const { error } = await sb.auth.signInWithOAuth({
+    provider: 'kakao',
+    options: {
+      redirectTo: location.origin + location.pathname,
+      scopes: 'profile_nickname profile_image',
+    },
+  });
   if (error) alert('카카오 로그인 오류: ' + error.message);
 };
 document.getElementById('nameBtn').onclick = async () => {
