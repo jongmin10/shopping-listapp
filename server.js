@@ -3,10 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 const server = http.createServer((req, res) => {
-  const url = req.url === '/' ? '/index.html' : req.url;
-  const allowed = ['/index.html', '/shopping-list.html'];
-  if (!allowed.includes(url)) { res.writeHead(404); res.end('Not found'); return; }
-  const filePath = path.join(__dirname, url);
+  const name = req.url === '/shopping-list.html' ? 'shopping-list.html' : 'index.html';
+  const filePath = path.join(__dirname, name);
   fs.readFile(filePath, (err, data) => {
     if (err) { res.writeHead(404); res.end('Not found'); return; }
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
