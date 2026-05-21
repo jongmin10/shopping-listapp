@@ -124,8 +124,10 @@
   </div>
   <div class="cat-tabs" id="catTabs"></div>
   <div class="summary-bar" id="summaryBar">항목 없음</div>
-  <div class="list-wrap" id="listWrap">
-    <div class="empty" id="emptyState"><div class="empty-icon">🛒</div><div class="empty-text">+ 버튼을 눌러 항목을 추가하세요</div></div>
+  <div class="list-wrap" id="listWrap"></div>
+  <div class="empty" id="emptyState" style="display:none">
+    <div class="empty-icon">🛒</div>
+    <div class="empty-text">+ 버튼을 눌러 항목을 추가하세요</div>
   </div>
 </div>
 <button class="fab" id="fab">+</button>
@@ -154,7 +156,7 @@
 </div>
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-const sb = createClient('https://ugowzkpuymwuqoqwkvfi.supabase.co','sb_publishable_ZpK0oYqtWxOmeXfUIVy9zA_qLgXNIlz');
+const sb=createClient('https://ugowzkpuymwuqoqwkvfi.supabase.co','sb_publishable_ZpK0oYqtWxOmeXfUIVy9zA_qLgXNIlz');
 const CATS=[
   {id:'채소',label:'🥬 채소',color:'#22c55e'},
   {id:'육류',label:'🥩 육류',color:'#ef4444'},
@@ -168,7 +170,7 @@ async function init(){
   show('loading');
   const params=new URLSearchParams(location.search);
   const joinCode=params.get('join');
-  const {data:{session}}=await sb.auth.getSession();
+  const{data:{session}}=await sb.auth.getSession();
   if(session?.user){
     const u=session.user;
     s.userId=u.id;
@@ -176,7 +178,7 @@ async function init(){
     s.avatarUrl=u.user_metadata?.avatar_url||null;
     localStorage.setItem('userId',s.userId);
     localStorage.setItem('userName',s.userName);
-  } else {
+  }else{
     s.userId=localStorage.getItem('userId');
     s.userName=localStorage.getItem('userName');
     s.avatarUrl=null;
@@ -190,14 +192,7 @@ async function init(){
   setupRealtime();show('main');buildUI();
 }
 document.getElementById('kakaoBtn').onclick=async()=>{
-  const{error}=await sb.auth.signInWithOAuth({
-    provider:'kakao',
-    options:{
-      redirectTo:location.origin+location.pathname,
-      scopes:'profile_nickname profile_image',
-      queryParams:{scope:'profile_nickname profile_image'},
-    },
-  });
+  const{error}=await sb.auth.signInWithOAuth({provider:'kakao',options:{redirectTo:location.origin+location.pathname,scopes:'profile_nickname profile_image',queryParams:{scope:'profile_nickname profile_image'}}});
   if(error)alert('카카오 로그인 오류: '+error.message);
 };
 document.getElementById('nameBtn').onclick=async()=>{
@@ -276,11 +271,12 @@ function setupRealtime(){
       }).subscribe();
 }
 function render(){
-  const wrap=document.getElementById('listWrap'),empty=document.getElementById('emptyState');
+  const wrap=document.getElementById('listWrap');
+  const empty=document.getElementById('emptyState');
   const total=s.items.length,done=s.items.filter(i=>i.checked).length;
   document.getElementById('summaryBar').textContent=total===0?'항목 없음':`${total}개 항목 · 완료 ${done}개`;
   const filtered=s.filter==='all'?s.items:s.items.filter(i=>i.category===s.filter);
-  if(!filtered.length){wrap.innerHTML='';wrap.appendChild(empty);empty.style.display='block';return;}
+  if(!filtered.length){wrap.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
   const grouped={};
   filtered.forEach(item=>{(grouped[item.category]=grouped[item.category]||[]).push(item);});
