@@ -7,10 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg:#ffffff;--bg2:#f8f9fa;--border:#e5e7eb;--text:#111827;--text2:#6b7280;
-      --accent:#2563eb;--accent-bg:#eff6ff;--danger:#ef4444;--success:#22c55e;--radius:12px;
-    }
+    :root{--bg:#fff;--bg2:#f8f9fa;--border:#e5e7eb;--text:#111827;--text2:#6b7280;--accent:#2563eb;--accent-bg:#eff6ff;--danger:#ef4444;--success:#22c55e;--radius:12px;}
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
     body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;}
     #loadingScreen{display:flex;height:100vh;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
@@ -66,7 +63,7 @@
     .empty-icon{font-size:3rem;margin-bottom:12px;}
     .empty-text{font-size:.9rem;}
     .fab{position:fixed;bottom:76px;right:20px;width:56px;height:56px;background:var(--accent);color:#fff;border:none;border-radius:50%;font-size:1.8rem;cursor:pointer;box-shadow:0 4px 16px rgba(37,99,235,.35);display:none;align-items:center;justify-content:center;transition:transform .2s,box-shadow .2s;z-index:50;}
-    .fab:hover{transform:scale(1.06);box-shadow:0 6px 22px rgba(37,99,235,.45);}
+    .fab:hover{transform:scale(1.06);}
     .fab:active{transform:scale(.94);}
     .bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;padding:10px 20px;background:var(--bg);border-top:1px solid var(--border);display:none;align-items:center;justify-content:space-between;z-index:50;}
     .clear-btn{background:none;border:none;font-family:inherit;font-size:.85rem;color:var(--danger);cursor:pointer;padding:6px 10px;border-radius:8px;transition:background .15s;}
@@ -121,7 +118,7 @@
   <div class="header">
     <div class="header-title" id="listName">장바구니</div>
     <div class="header-right">
-      <button class="icon-btn" id="shareBtn" title="공유">📤</button>
+      <button class="icon-btn" id="shareBtn">📤</button>
       <div class="avatar" id="userAvatar">?</div>
     </div>
   </div>
@@ -158,201 +155,197 @@
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 const sb = createClient('https://ugowzkpuymwuqoqwkvfi.supabase.co','sb_publishable_ZpK0oYqtWxOmeXfUIVy9zA_qLgXNIlz');
-const CATS = [
-  { id:'채소', label:'🥬 채소', color:'#22c55e' },
-  { id:'육류', label:'🥩 육류', color:'#ef4444' },
-  { id:'유제품', label:'🥛 유제품', color:'#3b82f6' },
-  { id:'냉동식품', label:'🧊 냉동식품', color:'#06b6d4' },
-  { id:'음료', label:'🧃 음료', color:'#f97316' },
-  { id:'기타', label:'📦 기타', color:'#9ca3af' },
+const CATS=[
+  {id:'채소',label:'🥬 채소',color:'#22c55e'},
+  {id:'육류',label:'🥩 육류',color:'#ef4444'},
+  {id:'유제품',label:'🥛 유제품',color:'#3b82f6'},
+  {id:'냉동식품',label:'🧊 냉동식품',color:'#06b6d4'},
+  {id:'음료',label:'🧃 음료',color:'#f97316'},
+  {id:'기타',label:'📦 기타',color:'#9ca3af'},
 ];
-const s = { userId:null, userName:null, avatarUrl:null, listId:null, inviteCode:null, items:[], filter:'all', selCat:'기타', channel:null };
-
-async function init() {
+const s={userId:null,userName:null,avatarUrl:null,listId:null,inviteCode:null,items:[],filter:'all',selCat:'기타',channel:null};
+async function init(){
   show('loading');
-  const params = new URLSearchParams(location.search);
-  const joinCode = params.get('join');
-  const { data:{ session } } = await sb.auth.getSession();
-  if (session?.user) {
-    const u = session.user;
-    s.userId = u.id;
-    s.userName = u.user_metadata?.name || u.user_metadata?.full_name || u.user_metadata?.preferred_username || '사용자';
-    s.avatarUrl = u.user_metadata?.avatar_url || null;
-    localStorage.setItem('userId', s.userId);
-    localStorage.setItem('userName', s.userName);
+  const params=new URLSearchParams(location.search);
+  const joinCode=params.get('join');
+  const {data:{session}}=await sb.auth.getSession();
+  if(session?.user){
+    const u=session.user;
+    s.userId=u.id;
+    s.userName=u.user_metadata?.name||u.user_metadata?.full_name||u.user_metadata?.preferred_username||'사용자';
+    s.avatarUrl=u.user_metadata?.avatar_url||null;
+    localStorage.setItem('userId',s.userId);
+    localStorage.setItem('userName',s.userName);
   } else {
-    s.userId = localStorage.getItem('userId');
-    s.userName = localStorage.getItem('userName');
-    s.avatarUrl = null;
+    s.userId=localStorage.getItem('userId');
+    s.userName=localStorage.getItem('userName');
+    s.avatarUrl=null;
   }
-  s.listId = localStorage.getItem('listId');
-  if (!s.userId) { if (joinCode) localStorage.setItem('pendingJoin', joinCode); show('login'); return; }
-  if (joinCode) { await joinList(joinCode); history.replaceState({}, '', location.pathname); }
-  else if (!s.listId) { await findOrCreateList(); }
-  if (location.hash || location.search) history.replaceState({}, '', location.pathname);
-  await Promise.all([loadMeta(), loadItems()]);
-  setupRealtime(); show('main'); buildUI();
+  s.listId=localStorage.getItem('listId');
+  if(!s.userId){if(joinCode)localStorage.setItem('pendingJoin',joinCode);show('login');return;}
+  if(joinCode){await joinList(joinCode);history.replaceState({},'',location.pathname);}
+  else if(!s.listId){await findOrCreateList();}
+  if(location.hash||location.search)history.replaceState({},'',location.pathname);
+  await Promise.all([loadMeta(),loadItems()]);
+  setupRealtime();show('main');buildUI();
 }
-
-document.getElementById('kakaoBtn').onclick = async () => {
-  const { error } = await sb.auth.signInWithOAuth({
-    provider: 'kakao',
-    options: {
-      redirectTo: location.origin + location.pathname,
-      scopes: 'profile_nickname profile_image',
+document.getElementById('kakaoBtn').onclick=async()=>{
+  const{error}=await sb.auth.signInWithOAuth({
+    provider:'kakao',
+    options:{
+      redirectTo:location.origin+location.pathname,
+      scopes:'profile_nickname profile_image',
+      queryParams:{scope:'profile_nickname profile_image'},
     },
   });
-  if (error) alert('카카오 로그인 오류: ' + error.message);
+  if(error)alert('카카오 로그인 오류: '+error.message);
 };
-document.getElementById('nameBtn').onclick = async () => {
-  const name = document.getElementById('nameInput').value.trim();
-  if (!name) { document.getElementById('nameInput').focus(); return; }
-  s.userId = 'u_' + crypto.randomUUID(); s.userName = name; s.avatarUrl = null;
-  localStorage.setItem('userId', s.userId); localStorage.setItem('userName', s.userName);
-  const pending = localStorage.getItem('pendingJoin');
-  if (pending) { localStorage.removeItem('pendingJoin'); await joinList(pending); history.replaceState({}, '', location.pathname); }
-  else { await findOrCreateList(); }
-  await Promise.all([loadMeta(), loadItems()]);
-  setupRealtime(); show('main'); buildUI();
+document.getElementById('nameBtn').onclick=async()=>{
+  const name=document.getElementById('nameInput').value.trim();
+  if(!name){document.getElementById('nameInput').focus();return;}
+  s.userId='u_'+crypto.randomUUID();s.userName=name;s.avatarUrl=null;
+  localStorage.setItem('userId',s.userId);localStorage.setItem('userName',s.userName);
+  const pending=localStorage.getItem('pendingJoin');
+  if(pending){localStorage.removeItem('pendingJoin');await joinList(pending);history.replaceState({},'',location.pathname);}
+  else{await findOrCreateList();}
+  await Promise.all([loadMeta(),loadItems()]);
+  setupRealtime();show('main');buildUI();
 };
-document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key==='Enter') document.getElementById('nameBtn').click(); });
-
-async function findOrCreateList() {
-  const { data:membership } = await sb.from('list_members').select('list_id').eq('user_id', s.userId).order('joined_at',{ascending:true}).limit(1).maybeSingle();
-  if (membership?.list_id) { s.listId = membership.list_id; localStorage.setItem('listId', s.listId); }
-  else { await createList(); }
+document.getElementById('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nameBtn').click();});
+async function findOrCreateList(){
+  const{data:m}=await sb.from('list_members').select('list_id').eq('user_id',s.userId).order('joined_at',{ascending:true}).limit(1).maybeSingle();
+  if(m?.list_id){s.listId=m.list_id;localStorage.setItem('listId',s.listId);}else{await createList();}
 }
-async function createList() {
-  const { data, error } = await sb.from('lists').insert({ name:`${s.userName}의 장바구니` }).select().single();
-  if (error) { console.error(error); return; }
-  s.listId = data.id; s.inviteCode = data.invite_code;
-  localStorage.setItem('listId', s.listId);
-  await sb.from('list_members').insert({ list_id:s.listId, user_id:s.userId, display_name:s.userName });
+async function createList(){
+  const{data,error}=await sb.from('lists').insert({name:`${s.userName}의 장바구니`}).select().single();
+  if(error){console.error(error);return;}
+  s.listId=data.id;s.inviteCode=data.invite_code;
+  localStorage.setItem('listId',s.listId);
+  await sb.from('list_members').insert({list_id:s.listId,user_id:s.userId,display_name:s.userName});
 }
-async function joinList(code) {
-  const { data:list } = await sb.from('lists').select('*').eq('invite_code', code).single();
-  if (!list) { alert('유효하지 않은 초대 링크입니다.'); return; }
-  s.listId = list.id; s.inviteCode = list.invite_code;
-  localStorage.setItem('listId', s.listId);
-  await sb.from('list_members').upsert({ list_id:s.listId, user_id:s.userId, display_name:s.userName });
+async function joinList(code){
+  const{data:list}=await sb.from('lists').select('*').eq('invite_code',code).single();
+  if(!list){alert('유효하지 않은 초대 링크입니다.');return;}
+  s.listId=list.id;s.inviteCode=list.invite_code;
+  localStorage.setItem('listId',s.listId);
+  await sb.from('list_members').upsert({list_id:s.listId,user_id:s.userId,display_name:s.userName});
 }
-async function loadMeta() {
-  const { data } = await sb.from('lists').select('*').eq('id', s.listId).single();
-  if (!data) return;
-  s.inviteCode = data.invite_code;
-  document.getElementById('listName').textContent = data.name;
+async function loadMeta(){
+  const{data}=await sb.from('lists').select('*').eq('id',s.listId).single();
+  if(!data)return;s.inviteCode=data.invite_code;
+  document.getElementById('listName').textContent=data.name;
 }
-async function loadItems() {
+async function loadItems(){
   setSyncing(true);
-  const { data } = await sb.from('shopping_items').select('*').eq('list_id', s.listId).order('created_at',{ascending:false});
-  setSyncing(false); s.items = data || []; render();
+  const{data}=await sb.from('shopping_items').select('*').eq('list_id',s.listId).order('created_at',{ascending:false});
+  setSyncing(false);s.items=data||[];render();
 }
-async function addItem() {
-  const text = document.getElementById('newName').value.trim();
-  const qty = Math.max(1, parseInt(document.getElementById('newQty').value)||1);
-  if (!text) { document.getElementById('newName').focus(); return; }
-  closeOverlay('addOverlay'); setSyncing(true);
-  const { data } = await sb.from('shopping_items').insert({ list_id:s.listId, text, quantity:qty, category:s.selCat, checked:false }).select().single();
-  setSyncing(false); if (data) { s.items.unshift(data); render(); }
+async function addItem(){
+  const text=document.getElementById('newName').value.trim();
+  const qty=Math.max(1,parseInt(document.getElementById('newQty').value)||1);
+  if(!text){document.getElementById('newName').focus();return;}
+  closeOverlay('addOverlay');setSyncing(true);
+  const{data}=await sb.from('shopping_items').insert({list_id:s.listId,text,quantity:qty,category:s.selCat,checked:false}).select().single();
+  setSyncing(false);if(data){s.items.unshift(data);render();}
 }
-async function toggleItem(id) {
-  const item = s.items.find(i=>i.id===id); if (!item) return;
+async function toggleItem(id){
+  const item=s.items.find(i=>i.id===id);if(!item)return;
   setSyncing(true);
-  await sb.from('shopping_items').update({ checked:!item.checked }).eq('id', id);
-  setSyncing(false); item.checked = !item.checked; render();
+  await sb.from('shopping_items').update({checked:!item.checked}).eq('id',id);
+  setSyncing(false);item.checked=!item.checked;render();
 }
-async function deleteItem(id) {
+async function deleteItem(id){
   setSyncing(true);
-  await sb.from('shopping_items').delete().eq('id', id);
-  setSyncing(false); s.items = s.items.filter(i=>i.id!==id); render();
+  await sb.from('shopping_items').delete().eq('id',id);
+  setSyncing(false);s.items=s.items.filter(i=>i.id!==id);render();
 }
-document.getElementById('clearBtn').onclick = async () => {
+document.getElementById('clearBtn').onclick=async()=>{
   setSyncing(true);
-  await sb.from('shopping_items').delete().eq('list_id', s.listId).eq('checked', true);
-  setSyncing(false); s.items = s.items.filter(i=>!i.checked); render();
+  await sb.from('shopping_items').delete().eq('list_id',s.listId).eq('checked',true);
+  setSyncing(false);s.items=s.items.filter(i=>!i.checked);render();
 };
-function setupRealtime() {
-  if (s.channel) sb.removeChannel(s.channel);
-  s.channel = sb.channel('list-'+s.listId)
-    .on('postgres_changes',{ event:'*', schema:'public', table:'shopping_items', filter:`list_id=eq.${s.listId}` },
-      ({ eventType, new:n, old:o }) => {
-        if (eventType==='INSERT') { if (!s.items.find(i=>i.id===n.id)) s.items.unshift(n); }
-        else if (eventType==='UPDATE') { const idx=s.items.findIndex(i=>i.id===n.id); if (idx!==-1) s.items[idx]=n; }
-        else if (eventType==='DELETE') { s.items=s.items.filter(i=>i.id!==o.id); }
+function setupRealtime(){
+  if(s.channel)sb.removeChannel(s.channel);
+  s.channel=sb.channel('list-'+s.listId)
+    .on('postgres_changes',{event:'*',schema:'public',table:'shopping_items',filter:`list_id=eq.${s.listId}`},
+      ({eventType,new:n,old:o})=>{
+        if(eventType==='INSERT'){if(!s.items.find(i=>i.id===n.id))s.items.unshift(n);}
+        else if(eventType==='UPDATE'){const idx=s.items.findIndex(i=>i.id===n.id);if(idx!==-1)s.items[idx]=n;}
+        else if(eventType==='DELETE'){s.items=s.items.filter(i=>i.id!==o.id);}
         render();
       }).subscribe();
 }
-function render() {
-  const wrap=document.getElementById('listWrap'), empty=document.getElementById('emptyState');
-  const total=s.items.length, done=s.items.filter(i=>i.checked).length;
-  document.getElementById('summaryBar').textContent = total===0 ? '항목 없음' : `${total}개 항목 · 완료 ${done}개`;
-  const filtered = s.filter==='all' ? s.items : s.items.filter(i=>i.category===s.filter);
-  if (!filtered.length) { wrap.innerHTML=''; wrap.appendChild(empty); empty.style.display='block'; return; }
+function render(){
+  const wrap=document.getElementById('listWrap'),empty=document.getElementById('emptyState');
+  const total=s.items.length,done=s.items.filter(i=>i.checked).length;
+  document.getElementById('summaryBar').textContent=total===0?'항목 없음':`${total}개 항목 · 완료 ${done}개`;
+  const filtered=s.filter==='all'?s.items:s.items.filter(i=>i.category===s.filter);
+  if(!filtered.length){wrap.innerHTML='';wrap.appendChild(empty);empty.style.display='block';return;}
   empty.style.display='none';
   const grouped={};
-  filtered.forEach(item=>{ (grouped[item.category]=grouped[item.category]||[]).push(item); });
+  filtered.forEach(item=>{(grouped[item.category]=grouped[item.category]||[]).push(item);});
   wrap.innerHTML='';
   CATS.forEach(({id:catId,label,color})=>{
-    if (!grouped[catId]) return;
-    if (s.filter==='all') { const h=document.createElement('div'); h.className='cat-group-header'; h.textContent=label; wrap.appendChild(h); }
+    if(!grouped[catId])return;
+    if(s.filter==='all'){const h=document.createElement('div');h.className='cat-group-header';h.textContent=label;wrap.appendChild(h);}
     grouped[catId].forEach((item,idx)=>{
       const row=document.createElement('div');
       row.className='item-row'+(item.checked?' checked':'');
       row.style.animationDelay=idx*0.03+'s';
-      const dot=document.createElement('div'); dot.className='cat-dot'; dot.style.background=color;
-      const info=document.createElement('div'); info.className='item-info';
+      const dot=document.createElement('div');dot.className='cat-dot';dot.style.background=color;
+      const info=document.createElement('div');info.className='item-info';
       info.innerHTML=`<div class="item-name">${esc(item.text)}</div><div class="item-meta">${item.quantity}개 · ${esc(item.category)}</div>`;
-      const del=document.createElement('button'); del.className='del-btn'; del.textContent='✕'; del.onclick=()=>deleteItem(item.id);
-      const cbWrap=document.createElement('label'); cbWrap.className='cb-wrap';
-      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=item.checked; cb.onchange=()=>toggleItem(item.id);
-      const cbBox=document.createElement('div'); cbBox.className='cb-box';
+      const del=document.createElement('button');del.className='del-btn';del.textContent='✕';del.onclick=()=>deleteItem(item.id);
+      const cbWrap=document.createElement('label');cbWrap.className='cb-wrap';
+      const cb=document.createElement('input');cb.type='checkbox';cb.checked=item.checked;cb.onchange=()=>toggleItem(item.id);
+      const cbBox=document.createElement('div');cbBox.className='cb-box';
       cbBox.innerHTML='<svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-      cbWrap.append(cb,cbBox); row.append(dot,info,del,cbWrap); wrap.appendChild(row);
+      cbWrap.append(cb,cbBox);row.append(dot,info,del,cbWrap);wrap.appendChild(row);
     });
   });
 }
-function buildUI() {
+function buildUI(){
   const av=document.getElementById('userAvatar');
-  if (s.avatarUrl) { av.innerHTML=`<img src="${s.avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="">`; }
-  else { av.textContent=(s.userName||'?')[0].toUpperCase(); }
+  if(s.avatarUrl){av.innerHTML=`<img src="${s.avatarUrl}" style="width:100%;height:100%;border-radius:50%;object-fit:cover" alt="">`;}
+  else{av.textContent=(s.userName||'?')[0].toUpperCase();}
   av.title=s.userName||'';
-  av.onclick=async()=>{ if (confirm(`${s.userName}님, 로그아웃 하시겠습니까?`)) { await sb.auth.signOut(); localStorage.clear(); location.reload(); } };
-  const tabs=document.getElementById('catTabs'); tabs.innerHTML='';
+  av.onclick=async()=>{if(confirm(`${s.userName}님, 로그아웃 하시겠습니까?`)){await sb.auth.signOut();localStorage.clear();location.reload();}};
+  const tabs=document.getElementById('catTabs');tabs.innerHTML='';
   [{id:'all',label:'전체'},...CATS].forEach(cat=>{
     const btn=document.createElement('button');
     btn.className='cat-tab'+(s.filter===cat.id?' active':'');
     btn.textContent=cat.label;
-    btn.onclick=()=>{ s.filter=cat.id; document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); render(); };
+    btn.onclick=()=>{s.filter=cat.id;document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render();};
     tabs.appendChild(btn);
   });
-  const grid=document.getElementById('catGrid'); grid.innerHTML='';
+  const grid=document.getElementById('catGrid');grid.innerHTML='';
   CATS.forEach(cat=>{
     const chip=document.createElement('button');
     chip.className='cat-chip'+(s.selCat===cat.id?' selected':'');
     chip.textContent=cat.label;
-    chip.onclick=()=>{ s.selCat=cat.id; document.querySelectorAll('.cat-chip').forEach(c=>c.classList.remove('selected')); chip.classList.add('selected'); };
+    chip.onclick=()=>{s.selCat=cat.id;document.querySelectorAll('.cat-chip').forEach(c=>c.classList.remove('selected'));chip.classList.add('selected');};
     grid.appendChild(chip);
   });
 }
-document.getElementById('fab').onclick=()=>{ document.getElementById('newName').value=''; document.getElementById('newQty').value='1'; document.getElementById('addOverlay').classList.add('open'); setTimeout(()=>document.getElementById('newName').focus(),250); };
+document.getElementById('fab').onclick=()=>{document.getElementById('newName').value='';document.getElementById('newQty').value='1';document.getElementById('addOverlay').classList.add('open');setTimeout(()=>document.getElementById('newName').focus(),250);};
 document.getElementById('addSubmitBtn').onclick=addItem;
-document.getElementById('newName').addEventListener('keydown',e=>{ if(e.key==='Enter') addItem(); });
-document.getElementById('qtyMinus').onclick=()=>{ const el=document.getElementById('newQty'); el.value=Math.max(1,(parseInt(el.value)||1)-1); };
-document.getElementById('qtyPlus').onclick=()=>{ const el=document.getElementById('newQty'); el.value=Math.min(99,(parseInt(el.value)||1)+1); };
-document.getElementById('addOverlay').onclick=e=>{ if(e.target===document.getElementById('addOverlay')) closeOverlay('addOverlay'); };
+document.getElementById('newName').addEventListener('keydown',e=>{if(e.key==='Enter')addItem();});
+document.getElementById('qtyMinus').onclick=()=>{const el=document.getElementById('newQty');el.value=Math.max(1,(parseInt(el.value)||1)-1);};
+document.getElementById('qtyPlus').onclick=()=>{const el=document.getElementById('newQty');el.value=Math.min(99,(parseInt(el.value)||1)+1);};
+document.getElementById('addOverlay').onclick=e=>{if(e.target===document.getElementById('addOverlay'))closeOverlay('addOverlay');};
 document.getElementById('shareBtn').onclick=async()=>{
   const url=`${location.origin}${location.pathname}?join=${s.inviteCode}`;
   document.getElementById('shareLinkText').textContent=url;
-  const { data:members }=await sb.from('list_members').select('*').eq('list_id',s.listId);
+  const{data:members}=await sb.from('list_members').select('*').eq('list_id',s.listId);
   document.getElementById('membersList').innerHTML=(members||[]).map(m=>`<div class="member-row"><div class="member-av">${esc((m.display_name||'?')[0].toUpperCase())}</div><span>${esc(m.display_name||'멤버')}</span>${m.user_id===s.userId?'<span class="me-badge">(나)</span>':''}</div>`).join('');
   document.getElementById('shareOverlay').classList.add('open');
 };
-document.getElementById('shareOverlay').onclick=e=>{ if(e.target===document.getElementById('shareOverlay')) closeOverlay('shareOverlay'); };
-document.getElementById('copyBtn').onclick=()=>{ navigator.clipboard.writeText(document.getElementById('shareLinkText').textContent).then(()=>{ const btn=document.getElementById('copyBtn'); btn.textContent='완료!'; setTimeout(()=>btn.textContent='복사',2000); }); };
+document.getElementById('shareOverlay').onclick=e=>{if(e.target===document.getElementById('shareOverlay'))closeOverlay('shareOverlay');};
+document.getElementById('copyBtn').onclick=()=>{navigator.clipboard.writeText(document.getElementById('shareLinkText').textContent).then(()=>{const btn=document.getElementById('copyBtn');btn.textContent='완료!';setTimeout(()=>btn.textContent='복사',2000);});};
 document.getElementById('kakaoShareBtn').onclick=()=>{
   const url=document.getElementById('shareLinkText').textContent;
-  if (window.Kakao?.Share) { Kakao.Share.sendDefault({ objectType:'feed', content:{ title:'쇼핑 리스트 공유', description:'함께 장보기 목록을 작성해요!', link:{ mobileWebUrl:url, webUrl:url } } }); }
-  else { navigator.clipboard.writeText(url); alert('링크가 복사되었습니다.\n카카오톡에 붙여넣기 해주세요.'); }
+  if(window.Kakao?.Share){Kakao.Share.sendDefault({objectType:'feed',content:{title:'쇼핑 리스트 공유',description:'함께 장보기 목록을 작성해요!',link:{mobileWebUrl:url,webUrl:url}}});}
+  else{navigator.clipboard.writeText(url);alert('링크가 복사되었습니다.\n카카오톡에 붙여넣기 해주세요.');}
 };
 function show(name){
   document.getElementById('loadingScreen').style.display=name==='loading'?'flex':'none';
@@ -361,9 +354,9 @@ function show(name){
   document.getElementById('fab').style.display=name==='main'?'flex':'none';
   document.getElementById('bottomBar').style.display=name==='main'?'flex':'none';
 }
-function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
-function setSyncing(on){ document.getElementById('syncDot')?.classList.toggle('syncing',on); }
-function esc(str){ return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function closeOverlay(id){document.getElementById(id).classList.remove('open');}
+function setSyncing(on){document.getElementById('syncDot')?.classList.toggle('syncing',on);}
+function esc(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 init();
 </script>
 </body>
