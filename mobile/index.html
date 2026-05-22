@@ -10,7 +10,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="장바구니">
-  <link rel="apple-touch-icon" href="/mobile/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="/mobile/icons/icon-192.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -36,7 +36,6 @@
       margin: 0 auto;
     }
 
-    /* ── LOADING ────────────────────────────── */
     #loadingScreen {
       display: flex;
       height: 100vh;
@@ -54,7 +53,6 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── LOGIN ──────────────────────────────── */
     #loginScreen {
       display: none;
       min-height: 100vh;
@@ -89,7 +87,6 @@
     .btn-kakao { background: #FEE500; color: #191919; }
     .btn-kakao:hover { background: #f0d800; }
 
-    /* ── HEADER ─────────────────────────────── */
     .header {
       position: sticky; top: 0; z-index: 100;
       background: var(--bg);
@@ -113,7 +110,6 @@
       font-size: 0.8rem; font-weight: 700; cursor: pointer;
     }
 
-    /* ── CATEGORY TABS ──────────────────────── */
     .cat-tabs {
       display: flex; gap: 8px; padding: 12px 20px;
       overflow-x: auto; scrollbar-width: none;
@@ -129,14 +125,12 @@
     }
     .cat-tab.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-    /* ── SUMMARY ────────────────────────────── */
     .summary-bar {
       padding: 8px 20px; font-size: 0.8rem;
       color: var(--text2); background: var(--bg2);
       border-bottom: 1px solid var(--border);
     }
 
-    /* ── LIST ───────────────────────────────── */
     .list-wrap { padding-bottom: 120px; }
     .cat-group-header {
       padding: 10px 20px 4px;
@@ -178,7 +172,6 @@
     .edit-btn:hover { color: var(--accent); background: var(--accent-bg); }
     .del-btn:hover  { color: var(--danger); background: #fef2f2; }
 
-    /* checkbox */
     .cb-wrap { position: relative; width: 22px; height: 22px; flex-shrink: 0; cursor: pointer; }
     .cb-wrap input { position: absolute; opacity: 0; inset: 0; cursor: pointer; z-index: 1; margin: 0; }
     .cb-box {
@@ -190,12 +183,10 @@
     .cb-box svg { opacity: 0; transform: scale(0.4); transition: all 0.15s; }
     .cb-wrap input:checked ~ .cb-box svg { opacity: 1; transform: scale(1); }
 
-    /* ── EMPTY ──────────────────────────────── */
     .empty { text-align: center; padding: 64px 20px; color: var(--text2); }
     .empty-icon { font-size: 3rem; margin-bottom: 12px; }
     .empty-text { font-size: 0.9rem; }
 
-    /* ── FAB ────────────────────────────────── */
     .fab {
       position: fixed; bottom: 76px; right: 20px;
       width: 56px; height: 56px;
@@ -208,7 +199,6 @@
     .fab:hover { transform: scale(1.06); box-shadow: 0 6px 22px rgba(37,99,235,.45); }
     .fab:active { transform: scale(0.94); }
 
-    /* ── BOTTOM BAR ─────────────────────────── */
     .bottom-bar {
       position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
       width: 100%; max-width: 480px;
@@ -229,7 +219,6 @@
     .sync-dot.syncing { animation: pulse 0.9s ease infinite; }
     @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.2;} }
 
-    /* ── MODAL ──────────────────────────────── */
     .overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,.4);
       z-index: 200; display: none; align-items: flex-end; justify-content: center;
@@ -262,7 +251,6 @@
     }
     .form-input:focus { border-color: var(--accent); }
 
-    /* qty stepper */
     .qty-stepper {
       display: flex; border: 1.5px solid var(--border);
       border-radius: 10px; overflow: hidden; width: fit-content;
@@ -279,7 +267,6 @@
       border: none; outline: none; font-family: inherit; background: var(--bg);
     }
 
-    /* category grid */
     .cat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
     .cat-chip {
       padding: 10px 6px; border: 1.5px solid var(--border); border-radius: 10px;
@@ -292,7 +279,6 @@
       color: var(--accent); font-weight: 700;
     }
 
-    /* share modal */
     .link-box {
       display: flex; align-items: center; gap: 8px;
       padding: 12px 14px; background: var(--bg2); border-radius: 10px;
@@ -321,13 +307,11 @@
 </head>
 <body>
 
-<!-- Loading -->
 <div id="loadingScreen">
   <div class="spinner"></div>
   <span style="color:var(--text2);font-size:.85rem">불러오는 중...</span>
 </div>
 
-<!-- Login -->
 <div id="loginScreen">
   <div class="login-emoji">🛒</div>
   <h1 class="login-title">장바구니</h1>
@@ -342,7 +326,6 @@
   </div>
 </div>
 
-<!-- Main -->
 <div id="mainScreen" style="display:none">
   <div class="header">
     <div class="header-title" id="listName">장바구니</div>
@@ -360,16 +343,13 @@
   </div>
 </div>
 
-<!-- FAB -->
 <button class="fab" id="fab">+</button>
 
-<!-- Bottom bar -->
 <div class="bottom-bar" id="bottomBar">
   <button class="clear-btn" id="clearBtn">완료 항목 삭제</button>
   <div class="sync-dot" id="syncDot"></div>
 </div>
 
-<!-- Add Modal -->
 <div class="overlay" id="addOverlay">
   <div class="modal" id="addModal">
     <div class="modal-handle"></div>
@@ -394,7 +374,6 @@
   </div>
 </div>
 
-<!-- Share Modal -->
 <div class="overlay" id="shareOverlay">
   <div class="modal">
     <div class="modal-handle"></div>
@@ -506,7 +485,6 @@ async function findOrCreateList() {
     .order('joined_at', { ascending: true })
     .limit(1)
     .maybeSingle();
-
   if (membership?.list_id) {
     s.listId = membership.list_id;
     localStorage.setItem('listId', s.listId);
@@ -807,7 +785,6 @@ document.getElementById('addOverlay').onclick = e => {
 document.getElementById('shareBtn').onclick = async () => {
   const url = `${location.origin}${location.pathname}?join=${s.inviteCode}`;
   document.getElementById('shareLinkText').textContent = url;
-
   const { data: members } = await sb.from('list_members')
     .select('*').eq('list_id', s.listId);
   document.getElementById('membersList').innerHTML = (members || [])
@@ -816,7 +793,6 @@ document.getElementById('shareBtn').onclick = async () => {
       <span>${esc(m.display_name||'멤버')}</span>
       ${m.user_id === s.userId ? '<span class="me-badge">(나)</span>' : ''}
     </div>`).join('');
-
   document.getElementById('shareOverlay').classList.add('open');
 };
 document.getElementById('shareOverlay').onclick = e => {
